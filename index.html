@@ -10,6 +10,7 @@
     <div class="top-section">
         <div class="container">
             <div class="models-row">
+                <!-- Modelos 3D como elementos de fondo -->
                 <div class="left-model">
                     <model-viewer 
                         src="/palida/gorra.glb" 
@@ -18,11 +19,6 @@
                         onclick="window.location.href='https://www.instagram.com/palida_studios';">
                     </model-viewer>
                 </div>
-                <div class="center-logos">
-                    <img src="/katchi/katchi.png" alt="Katchi Brand">
-                    <div class="crossover">X</div>
-                    <img src="/palida/palida.png" alt="Palida Brand">
-                </div>
                 <div class="right-model">
                     <model-viewer 
                         src="/katchi/dress.glb" 
@@ -30,6 +26,17 @@
                         camera-controls 
                         onclick="window.location.href='https://www.instagram.com/kat._.chi';">
                     </model-viewer>
+                </div>
+
+                <!-- Logos reorganizados: arriba, centro, abajo -->
+                <div class="center-logos">
+                    <img src="/katchi/katchi.png" alt="Katchi Brand" class="katchi-logo"
+                         onclick="window.open('https://www.instagram.com/kat._.chi', '_blank')">
+
+                    <div class="crossover">X</div>
+
+                    <img src="/palida/palida.png" alt="Palida Brand" class="palida-logo"
+                         onclick="window.open('https://www.instagram.com/palida_studios', '_blank')">
                 </div>
             </div>
         </div>
@@ -47,7 +54,8 @@
             </section>
         </div>
         <div class="footer">
-           <img src="/stranova/Stranova.jpg" alt="Stranovus Agency">
+            <img src="/stranova/Stranova.jpg" alt="Stranovus Agency"
+                 onclick="window.open('https://www.instagram.com/stranovus_agency', '_blank')">
         </div>
     </div>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
