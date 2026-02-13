@@ -56,7 +56,7 @@
             <section id="formSection" class="registration-box">
                 <h2>DATOS DE ALUMNO</h2>
                 <input type="text" id="studentName" placeholder="NOMBRE COMPLETO">
-                <input type="text" id="studentId" placeholder="GRUPO (E.G. 402-B)">
+                <input type="text" id="studentId" placeholder="GRUPO (P. EJ. 3002)">
                 <button id="btnEnviar" onclick="enviarASupabase()">MANDAR ASISTENCIA</button>
             </section>
         </div>
@@ -70,58 +70,35 @@
     const SB_URL = "https://giazbybudlgngjpzqiyq.supabase.co"; 
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpYXpieWJ1ZGxnbmdqcHpxaXlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4Njc5NzgsImV4cCI6MjA4NjQ0Mzk3OH0.J9bO_5WKl0cLXy2JnAg-_Ci0P1EzjiNAFwvxdEEJB7Q";
 
+    // 1. Configuración de interacción de los modelos 3D
     function setupTouchZones() {
         const leftModel = document.getElementById('leftModel');
         const rightModel = document.getElementById('rightModel');
         const leftTouch = document.getElementById('leftTouch');
         const rightTouch = document.getElementById('rightTouch');
 
-        // Configuración de interacción
-        [
-            { zone: leftTouch, model: leftModel },
-            { zone: rightTouch, model: rightModel }
-        ].forEach(({ zone, model }) => {
+        [{ zone: leftTouch, model: leftModel }, { zone: rightTouch, model: rightModel }].forEach(({ zone, model }) => {
             let isDragging = false;
-            let lastX = 0;
-            let lastY = 0;
-
-            // Variables para acumular la rotación actual
-            let currentTheta = 0; 
-            let currentPhi = 75; // Ángulo inicial según tu HTML
+            let lastX = 0, lastY = 0, currentTheta = 0, currentPhi = 75;
 
             const startInteraction = (x, y) => {
                 isDragging = true;
                 zone.classList.add('dragging');
                 model.autoRotate = false;
-                
-                // Obtener el estado actual del modelo justo al tocar para evitar saltos
                 const orbit = model.getCameraOrbit();
-                currentTheta = (orbit.theta * 180) / Math.PI; // Convertir a grados
-                currentPhi = (orbit.phi * 180) / Math.PI;     // Convertir a grados
-                
-                lastX = x;
-                lastY = y;
+                currentTheta = (orbit.theta * 180) / Math.PI;
+                currentPhi = (orbit.phi * 180) / Math.PI;
+                lastX = x; lastY = y;
             };
 
             const moveInteraction = (x, y) => {
                 if (!isDragging) return;
-
-                const deltaX = x - lastX;
-                const deltaY = y - lastY;
-
-                // Sensibilidad ajustada
+                const deltaX = x - lastX, deltaY = y - lastY;
                 currentTheta -= deltaX * 0.4;
                 currentPhi -= deltaY * 0.4;
-
-                // LIMITES ESTRICTOS para que no se trabe arriba/abajo
-                // Phi 10 es casi cenit, Phi 170 es casi nadir
                 currentPhi = Math.max(10, Math.min(170, currentPhi));
-
-                // Aplicar la nueva órbita
                 model.cameraOrbit = `${currentTheta}deg ${currentPhi}deg 105%`;
-
-                lastX = x;
-                lastY = y;
+                lastX = x; lastY = y;
             };
 
             const endInteraction = () => {
@@ -131,15 +108,9 @@
                 model.autoRotate = true;
             };
 
-            // Mouse
-            zone.addEventListener('mousedown', (e) => {
-                startInteraction(e.clientX, e.clientY);
-                e.preventDefault();
-            });
+            zone.addEventListener('mousedown', (e) => startInteraction(e.clientX, e.clientY));
             window.addEventListener('mousemove', (e) => moveInteraction(e.clientX, e.clientY));
             window.addEventListener('mouseup', endInteraction);
-
-            // Touch
             zone.addEventListener('touchstart', (e) => {
                 startInteraction(e.touches[0].clientX, e.touches[0].clientY);
                 e.preventDefault();
@@ -152,29 +123,147 @@
         });
     }
 
-    function startBlinking(zone) {
-        setTimeout(() => {
-            zone.classList.add('idle-blink');
-            setTimeout(() => zone.classList.remove('idle-blink'), 640);
-            setInterval(() => {
-                if (!zone.classList.contains('dragging')) {
-                    zone.classList.add('idle-blink');
-                    setTimeout(() => zone.classList.remove('idle-blink'), 640);
-                }
-            }, 8000);
-        }, 600);
+    // 2. Lógica de Envío a Supabase [cite: 26, 30]
+    async function enviarASupabase() {
+        const nombre = document.getElementById('studentName').value.trim();
+        const grupo = document.getElementById('studentId').value.trim();
+        const btn = document.getElementById('btnEnviar');
+
+        // LOGIN ADMIN SECRETO 
+        if(nombre === 'admin' && grupo === '7001') {
+            abrirPanelAdmin();
+            return;
+        }
+
+        if(!nombre || !grupo) {
+            alert("Por favor llena ambos campos.");
+            return;
+        }
+
+        btn.innerText = "PROCESANDO...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`${SB_URL}/rest/v1/asistencia`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SB_KEY,
+                    'Authorization': `Bearer ${SB_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({
+                    nombre: nombre,
+                    grupo: grupo,
+                    asistio: "NO" // Valor por defecto 
+                })
+            });
+
+            if(response.ok) {
+                // Guardar cookie por 7 días [cite: 34, 35]
+                document.cookie = `user_asistencia=${encodeURIComponent(nombre)}; max-age=604800; path=/`;
+                alert("¡ASISTENCIA REGISTRADA!");
+                location.reload();
+            } else {
+                alert("Error al registrar. Verifica las columnas en Supabase.");
+                btn.innerText = "MANDAR ASISTENCIA";
+                btn.disabled = false;
+            }
+        } catch (e) {
+            alert("Error de conexión");
+            btn.disabled = false;
+        }
     }
 
-    // --- EL RESTO DE TU LÓGICA (Supabase, Admin, etc.) SE MANTIENE IGUAL ---
-    async function enviarASupabase() { /* ... tu código ... */ }
-    async function abrirPanelAdmin() { /* ... tu código ... */ }
-    // ... etc ...
+    // 3. Panel de Administrador (Tal cual lo pediste) [cite: 38, 39]
+    let alumnosCache = [];
+    async function abrirPanelAdmin() {
+        document.body.innerHTML = `
+            <div style="background:#121212; color:#f5f5dc; min-height:100vh; padding:20px; font-family:sans-serif; text-transform: uppercase;">
+                <h1 style="border-bottom: 4px solid #ccff00">LISTA DE ASISTENCIA</h1>
+                <div style="position:sticky; top:0; background:#121212; padding:10px 0; z-index:10;">
+                    <input type="text" id="buscador" placeholder="BUSCAR POR NOMBRE..." onkeyup="filtrarAlumnos()" 
+                           style="width:100%; padding:10px; background:transparent; border:2px solid #ccff00; color:#ccff00; outline:none;">
+                    <div id="stats" style="color:#ccff00; font-weight:bold; margin:10px 0;">CARGANDO...</div>
+                </div>
+                <div id="listaAsistencia"></div>
+                <button onclick="location.reload()" style="background:#444; color:white; width:100%; padding:15px; margin-top:20px; border:none; cursor:pointer;">SALIR</button>
+            </div>
+        `;
+        cargarAlumnos();
+    }
 
+    async function cargarAlumnos() {
+        const response = await fetch(`${SB_URL}/rest/v1/asistencia?select=*&order=nombre.asc`, {
+            headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+        });
+        alumnosCache = await response.json();
+        renderLista(alumnosCache);
+    }
+
+    function renderLista(data) {
+        const container = document.getElementById('listaAsistencia');
+        const presentes = alumnosCache.filter(a => a.asistio === 'SÍ').length;
+        document.getElementById('stats').innerText = `TOTAL: ${alumnosCache.length} | PRESENTES: ${presentes}`;
+        
+        container.innerHTML = data.map(al => `
+            <div style="border-bottom:1px solid #333; padding:15px 0; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:bold; color:${al.asistio === 'SÍ' ? '#ccff00' : 'white'}">${al.nombre}</div>
+                    <small style="opacity:0.6">GRUPO: ${al.grupo}</small>
+                </div>
+                <button onclick="marcarAsistencia('${al.id}', this)" 
+                        style="background:${al.asistio === 'SÍ' ? '#ccff00' : 'transparent'}; 
+                               color:${al.asistio === 'SÍ' ? 'black' : 'white'}; 
+                               border:1px solid ${al.asistio === 'SÍ' ? '#ccff00' : '#555'}; padding:10px; font-size:10px; min-width:100px; cursor:pointer;">
+                    ${al.asistio === 'SÍ' ? 'PRESENTE' : 'DAR ASISTENCIA'}
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function filtrarAlumnos() {
+        const term = document.getElementById('buscador').value.toLowerCase();
+        const filtrados = alumnosCache.filter(a => a.nombre.toLowerCase().includes(term));
+        renderLista(filtrados);
+    }
+
+    async function marcarAsistencia(id, btn) {
+        btn.innerText = "...";
+        const response = await fetch(`${SB_URL}/rest/v1/asistencia?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ asistio: "SÍ" })
+        });
+        if(response.ok) {
+            const al = alumnosCache.find(a => a.id == id);
+            if(al) al.asistio = 'SÍ';
+            renderLista(alumnosCache);
+        }
+    }
+
+    function startBlinking(zone) {
+        setInterval(() => {
+            if (!zone.classList.contains('dragging')) {
+                zone.classList.add('idle-blink');
+                setTimeout(() => zone.classList.remove('idle-blink'), 640);
+            }
+        }, 8000);
+    }
+
+    // Inicialización y Cookies 
     window.onload = () => {
         setupTouchZones();
         startBlinking(document.getElementById('leftTouch'));
         startBlinking(document.getElementById('rightTouch'));
-        // Lógica de cookies...
+
+        const user = document.cookie.split('; ').find(row => row.startsWith('user_asistencia='));
+        if(user) {
+            document.getElementById('userInfoDisplay').style.display = 'block';
+            const name = decodeURIComponent(user.split('=')[1]);
+            document.getElementById('savedName').innerText = name;
+            document.getElementById('studentName').value = name;
+        }
     };
 </script>
 </body>
