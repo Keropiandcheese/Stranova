@@ -3,7 +3,7 @@
 :root { 
     --background: #6a1b9a; 
     --text: #ffffff; 
-    --accent: #ab47bc; 
+    --accent: #ff3ec8; /* Rosa chillón */
     --acid: #ffffff;
 }
 
@@ -26,15 +26,23 @@ body {
 /* Fondo que cubre toda la pantalla */
 .top-section {
     background-color: var(--accent);
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
     padding: 0;
     margin: 0;
     padding-top: env(safe-area-inset-top);
+    min-height: 0;
+    box-sizing: border-box;
+    /* El alto lo define el .container */
 }
 
 /* Fondo morado hasta abajo de la imagen footer */
 .bottom-section { 
     background-color: var(--background); 
-    padding: 30px 0 0; 
+    padding: 48px 0 0; 
     text-align: center; 
 }
 
@@ -52,8 +60,9 @@ body {
 }
 
 .container {
-    max-width: 1600px;
-    margin: 10px auto;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
     border: 4px solid black;
     border-radius: 16px;
     box-sizing: border-box;
@@ -79,13 +88,26 @@ body {
 /* Los modelos 3D ahora son MAS GRANDES pero detrás de los logos */
 .left-model, .right-model {
     position: absolute;
-    width: 38%;
-    max-width: 380px;
-    height: 55%;
-    max-height: 500px;
+    width: 36vw;
+    max-width: 420px;
+    height: 60vh;
+    max-height: 520px;
+    min-width: 220px;
+    min-height: 260px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.left-model {
+    left: 6vw;
+}
+
+.right-model {
+    right: 6vw;
 }
 
 /* Zona sensible al arrastre centrada sobre el modelo */
@@ -95,14 +117,24 @@ body {
     left: 50%;
     top: 85%;
     transform: translate(-50%, -50%);
-    width: 30%;
-    height: 30%;
-    border-radius: 12px;
+    width: 140px;
+    height: 60px;
+    min-width: 90px;
+    min-height: 140px;
+    max-width: 50px;
+    max-height: 80px;
+    border-radius: 10px;
     background: transparent;
-    border: 1px solid transparent;
+    border: 2.5px dashed rgba(255,255,255,0.18);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.08);
     touch-action: none;
     z-index: 4;
-    display: block;
+     width: 100%;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: flex-start;
+     /* El alto lo define el .container */
     transition: opacity 200ms ease;
     pointer-events: auto;
     opacity: 0;
@@ -160,14 +192,6 @@ body {
 .right-model .touch-zone:active {
     cursor: grabbing;
     opacity: 0;
-}
-
-.left-model {
-    left: -2%;
-}
-
-.right-model {
-    right: -2%;
 }
 
 model-viewer {
@@ -410,7 +434,7 @@ model-viewer {
 /* Sección inferior */
 .form-container { 
     max-width: 700px; 
-    margin: 0 auto; 
+    margin: 0 auto 48px auto;
     padding: 0 16px; 
 }
 
