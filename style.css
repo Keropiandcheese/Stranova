@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Oswald:wght@400;600;700&display=swap');
 
 :root { 
-    --background: #6a1b9a; /* Morado */
+    --background: #6a1b9a; 
     --text: #ffffff; 
-    --accent: #ab47bc; /* Rosa */
+    --accent: #ab47bc; 
 }
 
 * {
@@ -21,7 +21,6 @@ body {
     padding-top: env(safe-area-inset-top);
 }
 
-/* --- SECCIÓN SUPERIOR (MODELOS) --- */
 .top-section {
     background-color: var(--accent);
     padding: 0;
@@ -79,8 +78,8 @@ model-viewer {
     height: 35%;
     border-radius: 12px;
     background: transparent;
-    /* CORRECCIÓN: Permitir scroll vertical en móviles */
-    touch-action: pan-y; 
+    /* Bloquea scroll solo dentro de este cuadro */
+    touch-action: none; 
     z-index: 4;
     transition: opacity 200ms ease;
     opacity: 0;
@@ -96,7 +95,6 @@ model-viewer {
     25%, 75% { background: rgba(255,255,255,0.25); }
 }
 
-/* --- LOGOS CENTRALES --- */
 .center-logos {
     grid-row: 1 / span 3;
     display: flex;
@@ -110,7 +108,6 @@ model-viewer {
 .crossover { font-family: 'Anton'; font-size: clamp(80px, 22vw, 180px); z-index: 3; text-shadow: 0 0 30px rgba(0,0,0,0.8); line-height: 0.9; }
 .palida-logo { width: 100%; max-width: clamp(220px, 47vw, 470px); z-index: 3; cursor: pointer; pointer-events: auto; }
 
-/* --- SECCIÓN INFERIOR --- */
 .bottom-section { 
     background-color: var(--background); 
     padding: 60px 0 0; 
@@ -159,14 +156,8 @@ button {
     transition: transform 0.2s, background 0.2s;
 }
 
-button:hover {
-    background: white;
-    color: var(--background);
-}
-
-button:active {
-    transform: scale(0.95);
-}
+button:hover { background: white; color: var(--background); }
+button:active { transform: scale(0.95); }
 
 .footer {
     margin: 0;
@@ -177,24 +168,17 @@ button:active {
 
 .footer img {
     width: 100%;
-    max-width: auto; 
     height: auto;
     display: block; 
     margin: 0 auto;
 }
 
-/* --- MEDIA QUERIES --- */
 @media (min-width: 1024px) {
-    .models-row {
-        aspect-ratio: 16 / 7; 
-        padding: 40px 0;
-    }
+    .models-row { aspect-ratio: 16 / 7; padding: 40px 0; }
     .left-model { left: 4% !important; width: 28% !important; }
     .right-model { right: 4% !important; width: 28% !important; }
 }
 
 @media (max-width: 480px) {
-    .models-row {
-        aspect-ratio: 0.85 / 1; 
-    }
+    .models-row { aspect-ratio: 0.85 / 1; }
 }
