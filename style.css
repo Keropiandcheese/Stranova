@@ -14,7 +14,6 @@ body {
     margin: 0;
     font-family: 'Oswald', 'Bebas Neue', sans-serif;
     color: var(--text);
-    /* 1. Fondo rosa para que el inicio de la página sea fluido */
     background-color: var(--accent); 
     text-transform: uppercase;
     font-weight: 500;
@@ -52,7 +51,6 @@ body {
     aspect-ratio: 1 / 1; 
 }
 
-/* --- MODELOS Y ZONAS TÁCTILES (SE MANTIENEN IGUAL) --- */
 .left-model, .right-model {
     position: absolute;
     width: 38%;
@@ -81,7 +79,8 @@ model-viewer {
     height: 35%;
     border-radius: 12px;
     background: transparent;
-    touch-action: none;
+    /* CORRECCIÓN: Permitir scroll vertical en móviles */
+    touch-action: pan-y; 
     z-index: 4;
     transition: opacity 200ms ease;
     opacity: 0;
@@ -111,7 +110,7 @@ model-viewer {
 .crossover { font-family: 'Anton'; font-size: clamp(80px, 22vw, 180px); z-index: 3; text-shadow: 0 0 30px rgba(0,0,0,0.8); line-height: 0.9; }
 .palida-logo { width: 100%; max-width: clamp(220px, 47vw, 470px); z-index: 3; cursor: pointer; pointer-events: auto; }
 
-/* --- SECCIÓN INFERIOR (2. COLOR MORADO FLUIDO) --- */
+/* --- SECCIÓN INFERIOR --- */
 .bottom-section { 
     background-color: var(--background); 
     padding: 60px 0 0; 
@@ -169,11 +168,10 @@ button:active {
     transform: scale(0.95);
 }
 
-/* --- FOOTER (3. CIERRE PERFECTO SIN PIXELES EXTRA) --- */
 .footer {
     margin: 0;
     padding: 0;
-    line-height: 0; /* Mata el espacio blanco debajo de la imagen */
+    line-height: 0; 
     background-color: var(--background);
 }
 
@@ -181,7 +179,7 @@ button:active {
     width: 100%;
     max-width: auto; 
     height: auto;
-    display: block; /* Elimina el gap de la línea de base */
+    display: block; 
     margin: 0 auto;
 }
 

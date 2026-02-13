@@ -70,7 +70,6 @@
     const SB_URL = "https://giazbybudlgngjpzqiyq.supabase.co"; 
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpYXpieWJ1ZGxnbmdqcHpxaXlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4Njc5NzgsImV4cCI6MjA4NjQ0Mzk3OH0.J9bO_5WKl0cLXy2JnAg-_Ci0P1EzjiNAFwvxdEEJB7Q";
 
-    // 1. Configuración de interacción de los modelos 3D
     function setupTouchZones() {
         const leftModel = document.getElementById('leftModel');
         const rightModel = document.getElementById('rightModel');
@@ -111,25 +110,27 @@
             zone.addEventListener('mousedown', (e) => startInteraction(e.clientX, e.clientY));
             window.addEventListener('mousemove', (e) => moveInteraction(e.clientX, e.clientY));
             window.addEventListener('mouseup', endInteraction);
+            
+            // CORRECCIÓN: Se quita e.preventDefault() y se pone passive: true para permitir el scroll vertical
             zone.addEventListener('touchstart', (e) => {
                 startInteraction(e.touches[0].clientX, e.touches[0].clientY);
-                e.preventDefault();
-            }, { passive: false });
+            }, { passive: true });
+
             window.addEventListener('touchmove', (e) => {
-                moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
-                e.preventDefault();
-            }, { passive: false });
+                if (isDragging) {
+                    moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, { passive: true });
+
             window.addEventListener('touchend', endInteraction);
         });
     }
 
-    // 2. Lógica de Envío a Supabase [cite: 26, 30]
     async function enviarASupabase() {
         const nombre = document.getElementById('studentName').value.trim();
         const grupo = document.getElementById('studentId').value.trim();
         const btn = document.getElementById('btnEnviar');
 
-        // LOGIN ADMIN SECRETO 
         if(nombre === 'admin' && grupo === '7001') {
             abrirPanelAdmin();
             return;
@@ -155,12 +156,11 @@
                 body: JSON.stringify({
                     nombre: nombre,
                     grupo: grupo,
-                    asistio: "NO" // Valor por defecto 
+                    asistio: "NO" 
                 })
             });
 
             if(response.ok) {
-                // Guardar cookie por 7 días [cite: 34, 35]
                 document.cookie = `user_asistencia=${encodeURIComponent(nombre)}; max-age=604800; path=/`;
                 alert("¡ASISTENCIA REGISTRADA!");
                 location.reload();
@@ -175,7 +175,6 @@
         }
     }
 
-    // 3. Panel de Administrador (Tal cual lo pediste) [cite: 38, 39]
     let alumnosCache = [];
     async function abrirPanelAdmin() {
         document.body.innerHTML = `
@@ -251,7 +250,6 @@
         }, 8000);
     }
 
-    // Inicialización y Cookies 
     window.onload = () => {
         setupTouchZones();
         startBlinking(document.getElementById('leftTouch'));
