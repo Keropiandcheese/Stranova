@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Asistencia - Conferencia de Moda Streetwear</title>
+</head>
+<body>
+    <div class="top-section">
+        <div class="container">
+            <div class="models-row">
+                <div class="left-model">
+                    <model-viewer 
+                        src="/palida/gorra.glb" 
+                        auto-rotate 
+                        camera-controls 
+                        onclick="window.location.href='https://www.instagram.com/palida_studios';">
+                    </model-viewer>
+                </div>
+                <div class="center-logos">
+                    <img src="/katchi/katchi.png" alt="Katchi Brand">
+                    <div class="crossover">X</div>
+                    <img src="/palida/palida.png" alt="Palida Brand">
+                </div>
+                <div class="right-model">
+                    <model-viewer 
+                        src="/katchi/dress.glb" 
+                        auto-rotate 
+                        camera-controls 
+                        onclick="window.location.href='https://www.instagram.com/kat._.chi';">
+                    </model-viewer>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom-section">
+        <div class="form-container">
+            <div id="userInfoDisplay" class="user-info" style="display: none;">
+                ¡HOLA! <span id="savedName"></span>, YA ESTÁS REGISTRADO. <br>
+            </div>
+            <section id="formSection" class="registration-box">
+                <h2>DATOS DE ALUMNO</h2>
+                <input type="text" id="studentName" placeholder="NOMBRE COMPLETO">
+                <input type="text" id="studentId" placeholder="GRUPO (E.G. 402-B)">
+                <button id="btnEnviar" onclick="enviarASupabase()">MANDAR ASISTENCIA</button>
+            </section>
+        </div>
+        <div class="footer">
+           <img src="/stranova/Stranova.jpg" alt="Stranovus Agency">
+        </div>
+    </div>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+    <script>
+        // --- CONFIGURACIÓN ---
+        const SB_URL = "https://giazbybudlgngjpzqiyq.supabase.co"; 
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpYXpieWJ1ZGxnbmdqcHpxaXlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4Njc5NzgsImV4cCI6MjA4NjQ0Mzk3OH0.J9bO_5WKl0cLXy2JnAg-_Ci0P1EzjiNAFwvxdEEJB7Q";
+
+        // --- LÓGICA DE ENVÍO ---
+        async function enviarASupabase() {
+            const nombre = document.getElementById('studentName').value.trim();
+            const grupo = document.getElementById('studentId').value.trim();
+            const btn = document.getElementById('btnEnviar');
+
+            // LOGIN ADMIN SECRETO
+            if(nombre === 'admin' && grupo === '7001') {
+                abrirPanelAdmin();
+                return;
+            }
+
+            if(!nombre || !grupo) {
+                alert("Por favor llena ambos campos.");
+                return;
+            }
+
+            btn.innerText = "PROCESANDO...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${SB_URL}/rest/v1/asistencia`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SB_KEY,
+                        'Authorization': `Bearer ${SB_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        nombre: nombre,
+                        grupo: grupo,
+                        asistio: "NO"
+                    })
+                });
+
+                if(response.ok) {
+                    document.cookie = `user_asistencia=${nombre}; max-age=604800; path=/`;
+                    alert("¡REGISTRADO CORRECTAMENTE!");
+                    location.reload();
+                } else {
+                    alert("Error 400: Verifica que en Supabase las columnas se llamen: nombre, grupo, asistio");
+                    btn.innerText = "REINTENTAR";
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("Error de conexión");
+                btn.disabled = false;
+            }
+        }
+
+        // --- PANEL ADMINISTRADOR ---
+        let alumnosCache = [];
+
+        async function abrirPanelAdmin() {
+            document.body.innerHTML = `
+                <div style="background:var(--background); color:var(--text); min-height:100vh; padding:20px; font-family:'Space Grotesk'">
+                    <h1 style="font-family:'Archivo Black'; border-bottom: 4px solid var(--acid)">LISTA DE ASISTENCIA</h1>
+                    <div style="position:sticky; top:0; background:var(--background); padding:10px 0; z-index:10;">
+                        <input type="text" id="buscador" placeholder="BUSCAR POR NOMBRE..." onkeyup="filtrarAlumnos()" 
+                               style="border:2px solid var(--acid); color:var(--acid)">
+                        <div id="stats" style="color:var(--acid); font-weight:bold; margin:10px 0;">CARGANDO...</div>
+                    </div>
+                    <div id="listaAsistencia"></div>
+                    <button onclick="location.reload()" style="background:#444; width:100%; margin-top:20px;">SALIR</button>
+                </div>
+            `;
+            cargarAlumnos();
+        }
+
+        async function cargarAlumnos() {
+            const response = await fetch(`${SB_URL}/rest/v1/asistencia?select=*&order=nombre.asc`, {
+                headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+            });
+            alumnosCache = await response.json();
+            renderLista(alumnosCache);
+        }
+
+        function renderLista(data) {
+            const container = document.getElementById('listaAsistencia');
+            const presentes = alumnosCache.filter(a => a.asistio === 'SÍ').length;
+            document.getElementById('stats').innerText = `TOTAL: ${alumnosCache.length} | PRESENTES: ${presentes}`;
+            
+            container.innerHTML = data.map(al => `
+                <div class="admin-item">
+                    <div>
+                        <div style="font-family:'Archivo Black'; color:${al.asistio === 'SÍ' ? 'var(--acid)' : 'var(--text)'}">${al.nombre}</div>
+                        <small style="opacity:0.6">GRUPO: ${al.grupo}</small>
+                    </div>
+                    <button onclick="marcarAsistencia('${al.id}', this)" 
+                            style="background:${al.asistio === 'SÍ' ? 'var(--acid)' : 'transparent'}; 
+                                   color:${al.asistio === 'SÍ' ? 'var(--background)' : 'var(--text)'}; 
+                                   border:1px solid ${al.asistio === 'SÍ' ? 'var(--acid)' : '#555'}; padding:10px; font-size:10px; min-width:100px;">
+                        ${al.asistio === 'SÍ' ? 'PRESENTE' : 'DAR ASISTENCIA'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function filtrarAlumnos() {
+            const term = document.getElementById('buscador').value.toLowerCase();
+            const filtrados = alumnosCache.filter(a => a.nombre.toLowerCase().includes(term));
+            renderLista(filtrados);
+        }
+
+        async function marcarAsistencia(id, btn) {
+            btn.innerText = "...";
+            const response = await fetch(`${SB_URL}/rest/v1/asistencia?id=eq.${id}`, {
+                method: 'PATCH',
+                headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ asistio: "SÍ" })
+            });
+
+            if(response.ok) {
+                const al = alumnosCache.find(a => a.id == id);
+                if(al) al.asistio = 'SÍ';
+                renderLista(alumnosCache);
+            }
+        }
+
+        // Cookie de bienvenida
+        window.onload = () => {
+            const user = document.cookie.split('; ').find(row => row.startsWith('user_asistencia='));
+            if(user) {
+                document.getElementById('userInfoDisplay').style.display = 'block';
+                const name = decodeURIComponent(user.split('=')[1]);
+                document.getElementById('savedName').innerText = name;
+                document.getElementById('studentName').value = name;
+            }
+        };
+    </script>
+</body>
+</html>
