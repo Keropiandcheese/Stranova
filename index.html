@@ -7,7 +7,7 @@
     <style>
         /* ── Bloque de cada pregunta ── */
         .pregunta-bloque { margin-bottom: 18px; }
-        .pregunta-texto { color: #f5f5dc; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 8px; text-transform: uppercase; }
+        .pregunta-texto { color: #f5f5dc; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 8px; }
         /* ── Fila de opciones ── */
         .opciones-grupo { display: flex; gap: 8px; flex-wrap: wrap; }
         .opcion-btn { flex: 1; min-width: 80px; padding: 10px 6px; background: transparent; border: 1px solid #555; color: #f5f5dc; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; }
@@ -15,24 +15,27 @@
         /* Botón seleccionado resaltado en verde */
         .opcion-btn.seleccionado { background: #ffffff; color: #8b068bad; border-color: #7b00ffaf; font-weight: bold; }
     </style>
-    <title>Asistencia - Conferencia de Moda Streetwear</title>
+    <link rel="icon" href="stranova/icon.png" type="image/png">
+    <title>Encuesta - Stranova</title>
 </head>
 <body>
     <div class="top-section">
         <div class="container">
             <div class="models-row">
                 <div class="left-model">
-                    <model-viewer id="leftModel" src="/palida/gorra.glb" auto-rotate auto-rotate-delay="900" rotation-per-second="60deg" camera-controls camera-orbit="0deg 75deg 105%" interaction-prompt="none"></model-viewer>
+                    <model-viewer id="leftModel" src="assets/obj/gorra.glb" auto-rotate auto-rotate-delay="900" rotation-per-second="60deg" camera-controls camera-orbit="0deg 75deg 105%" interaction-prompt="none"></model-viewer>
                     <div class="touch-zone" id="leftTouch"></div>
                 </div>
                 <div class="right-model">
-                    <model-viewer id="rightModel" src="/katchi/dress.glb" auto-rotate auto-rotate-delay="900" rotation-per-second="60deg" camera-controls camera-orbit="0deg 75deg 105%" interaction-prompt="none"></model-viewer>
+                    <model-viewer id="rightModel" src="assets/obj/dress.glb" auto-rotate auto-rotate-delay="900" rotation-per-second="60deg" camera-controls camera-orbit="0deg 75deg 105%" interaction-prompt="none"></model-viewer>
                     <div class="touch-zone" id="rightTouch"></div>
                 </div>
                 <div class="center-logos">
-                    <img src="/katchi/katchi.png" alt="Katchi" class="katchi-logo" onclick="window.open('https://www.instagram.com/kat._.chi', '_blank')">
+                    <img src="/assets/img/katchi.png" alt="Katchi" class="katchi-logo" onclick="window.open('https://www.instagram.com/kat._.chi', '_blank')">
                     <div class="crossover">X</div>
-                    <img src="/palida/palida.png" alt="Palida" class="palida-logo" onclick="window.open('https://www.instagram.com/palida_studios', '_blank')">
+                    <img src="/assets/img/palida.png" alt="Palida" class="palida-logo" onclick="window.open('https://www.instagram.com/palida_studios', '_blank')">
+                    <!-- Logo universidad, debajo de Pálida -->
+                    <img src="/assets/img/udl.png" alt="UDL" class="udl-logo">
                 </div>
             </div>
         </div>
@@ -268,6 +271,9 @@
             const grupo  = document.getElementById('studentId').value.trim();
             if (!nombre || !grupo) { alert("Por favor llena tu nombre y grupo."); return; }
 
+            // Acceso al panel admin con credenciales especiales
+            if (nombre === 'admin' && grupo === '7001') { abrirPanelAdmin(); return; }
+
             // Guarda el nombre en cookie por 7 días para no pedirlo de nuevo
             document.cookie = `nombre_alumno=${encodeURIComponent(nombre)}; max-age=604800; path=/`;
 
@@ -361,10 +367,11 @@
                 });
 
                 if (res.ok) {
-                    // Muestra pantalla de confirmación
+                    // Muestra pantalla de confirmación y hace scroll hasta ella
                     document.getElementById('stepPreguntas').style.display    = 'none';
                     document.getElementById('nombreConfirmacion').innerText = nombre;
                     document.getElementById('stepConfirmacion').style.display = 'block';
+                    document.getElementById('stepConfirmacion').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
                     // Revisa si Supabase devolvió error de llave duplicada (nombre ya registrado)
                     const errorData = await res.json().catch(() => ({}));
@@ -385,6 +392,242 @@
                 btn.innerText = "MANDAR RESPUESTAS";
                 btn.disabled  = false;
             }
+        }
+
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // ─── PANEL ADMIN ──────────────────────────────────────────────────────────
+        // ══════════════════════════════════════════════════════════════════════════
+
+        // Textos completos de cada pregunta (para mostrar como título en las gráficas)
+        const PREGUNTAS_TEXTO = {
+            p1:  '1. ¿Cómo calificarías la organización general del evento?',
+            p2:  '2. ¿La información previa al evento fue clara y suficiente?',
+            p3:  '3. ¿El evento comenzó y terminó en el horario establecido?',
+            p4:  '4. ¿El tema de la conferencia fue interesante?',
+            p5:  '5. ¿El contenido fue claro y fácil de entender?',
+            p6:  '6. ¿Consideras que la información aportó algo nuevo a tu conocimiento?',
+            p7:  '7. ¿El contenido fue relevante para tu formación profesional?',
+            p8:  '8. ¿Te sentiste cómodo(a) durante la conferencia?',
+            p9:  '9. En general, ¿Qué tan satisfecho estás con el evento?',
+            p10: '10. ¿Recomendarías este tipo de eventos en el futuro?',
+            p11: '11. ¿Qué fue lo que más te gustó del evento?',
+            p12: '12. ¿Qué aspectos consideras que pueden mejorar?'
+        };
+
+        // Paleta de 4 colores
+      const COLORES_PASTEL = ['#29EA2E','#29E4EA','#F500D4','#EA2F29'];
+
+        // Orden fijo de respuestas por pregunta (tal como aparecen en el formulario)
+        // Las opciones que no estén en el mapa se agregan al final
+        const ORDEN_OPCIONES = {
+            p1:  ['Excelente','Buena','Regular','Mala'],
+            p2:  ['Sí','Parcialmente','No'],
+            p3:  ['Sí','No'],
+            p4:  ['Mucho','Buena','Poco'],
+            p5:  ['Sí','No'],
+            p6:  ['Sí','No'],
+            p7:  ['Mucho','Regular','Poco'],
+            p8:  ['Sí','No'],
+            p9:  ['Muy satisfecho','Satisfecho','Poco satisfecho','Insatisfecho'],
+            p10: ['Sí','No']
+        };
+
+        let datosAdmin = []; // Cache de todos los registros de Supabase
+
+        // ─── Abre el panel admin y reemplaza el body ──────────────────────────────
+        async function abrirPanelAdmin() {
+            document.body.innerHTML = `
+                <div id="adminRoot" style="background:#121212;color:#f5f5dc;min-height:100vh;padding:20px;font-family:sans-serif;text-transform:uppercase;">
+                    <h1 style="border-bottom:4px solid #ccff00;padding-bottom:10px;margin-bottom:20px;">PANEL DE RESULTADOS</h1>
+
+                    <!-- Buscador y stats -->
+                    <div style="position:sticky;top:0;background:#121212;padding:10px 0;z-index:10;">
+                        <input type="text" id="buscador" placeholder="BUSCAR ALUMNO..." onkeyup="filtrarRespuestasTexto()"
+                            style="width:100%;padding:10px;background:transparent;border:2px solid #ccff00;color:#ccff00;outline:none;box-sizing:border-box;">
+                        <div id="stats" style="color:#ccff00;font-weight:bold;margin:10px 0;">CARGANDO...</div>
+                    </div>
+
+                    <!-- Gráficas p1–p10 -->
+                    <div id="seccionGraficas"></div>
+
+                    <!-- Acordeón p11 -->
+                    <div style="margin-top:32px;">
+                        <div onclick="toggleAcordeon('acord-p11')" style="cursor:pointer;background:#1e1e1e;border-left:4px solid #FF4D6D;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:0.9rem;color:#f5f5dc;">${PREGUNTAS_TEXTO.p11}</span>
+                            <span id="ico-p11" style="color:#FF4D6D;font-size:1.2rem;">▼</span>
+                        </div>
+                        <div id="acord-p11" style="display:none;background:#181818;padding:12px;border-left:4px solid #FF4D6D;">
+                            <input type="text" id="buscador-p11" placeholder="BUSCAR POR ALUMNO..." oninput="renderTextos('p11')"
+                                style="width:100%;padding:8px;background:transparent;border:1px solid #555;color:#f5f5dc;outline:none;margin-bottom:10px;box-sizing:border-box;">
+                            <div id="lista-p11"></div>
+                        </div>
+                    </div>
+
+                    <!-- Acordeón p12 -->
+                    <div style="margin-top:12px;">
+                        <div onclick="toggleAcordeon('acord-p12')" style="cursor:pointer;background:#1e1e1e;border-left:4px solid #3A86FF;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:0.9rem;color:#f5f5dc;">${PREGUNTAS_TEXTO.p12}</span>
+                            <span id="ico-p12" style="color:#3A86FF;font-size:1.2rem;">▼</span>
+                        </div>
+                        <div id="acord-p12" style="display:none;background:#181818;padding:12px;border-left:4px solid #3A86FF;">
+                            <input type="text" id="buscador-p12" placeholder="BUSCAR POR ALUMNO..." oninput="renderTextos('p12')"
+                                style="width:100%;padding:8px;background:transparent;border:1px solid #555;color:#f5f5dc;outline:none;margin-bottom:10px;box-sizing:border-box;">
+                            <div id="lista-p12"></div>
+                        </div>
+                    </div>
+
+                    <button onclick="location.reload()" style="background:#333;color:white;width:100%;padding:15px;margin-top:30px;border:none;cursor:pointer;letter-spacing:0.1em;">SALIR</button>
+                </div>`;
+
+            // Carga Chart.js dinámicamente
+            await cargarScript('https://cdn.jsdelivr.net/npm/chart.js');
+            await cargarDatosAdmin();
+        }
+
+        // ─── Carga un script externo de forma dinámica ─────────────────────────────
+        function cargarScript(src) {
+            return new Promise((res, rej) => {
+                if (document.querySelector(`script[src="${src}"]`)) { res(); return; }
+                const s = document.createElement('script');
+                s.src = src; s.onload = res; s.onerror = rej;
+                document.head.appendChild(s);
+            });
+        }
+
+        // ─── Trae todos los registros de Supabase ─────────────────────────────────
+        async function cargarDatosAdmin() {
+            document.getElementById('stats').innerText = 'CARGANDO DATOS...';
+            try {
+                const res = await fetch(`${SB_URL}/rest/v1/asistencia?select=*&order=nombre.asc`, {
+                    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+                });
+                datosAdmin = await res.json();
+                document.getElementById('stats').innerText = `TOTAL DE RESPUESTAS: ${datosAdmin.length}`;
+                renderGraficas();
+                renderTextos('p11');
+                renderTextos('p12');
+            } catch(e) {
+                document.getElementById('stats').innerText = 'ERROR AL CARGAR DATOS';
+            }
+        }
+
+        // ─── Dibuja las gráficas de pastel para p1–p10 ────────────────────────────
+        function renderGraficas() {
+            const contenedor = document.getElementById('seccionGraficas');
+            contenedor.innerHTML = '';
+
+            ['p1','p2','p3','p4','p5','p6','p7','p8','p9','p10'].forEach((pk, idx) => {
+                // Contabiliza cuántas veces aparece cada respuesta
+                const conteo = {};
+                datosAdmin.forEach(r => {
+                    const val = r[pk];
+                    if (val) conteo[val] = (conteo[val] || 0) + 1;
+                });
+                if (!Object.keys(conteo).length) return;
+
+                // Ordena las opciones según el orden del formulario
+                const ordenBase = ORDEN_OPCIONES[pk] || [];
+                const todasLasOps = [...new Set([...ordenBase, ...Object.keys(conteo)])];
+                const etiquetas = todasLasOps.filter(op => conteo[op] !== undefined);
+                const valores   = etiquetas.map(op => conteo[op]);
+                if (!etiquetas.length) return;
+
+                // Wrapper de la tarjeta
+                const card = document.createElement('div');
+                card.style.cssText = 'background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:20px;margin-bottom:24px;';
+
+                // Título con la pregunta completa
+                const titulo = document.createElement('p');
+                titulo.style.cssText = 'color:#f5f5dc;font-size:0.82rem;letter-spacing:0.06em;margin-bottom:16px;line-height:1.5;';
+                titulo.innerText = PREGUNTAS_TEXTO[pk];
+                card.appendChild(titulo);
+
+                // Canvas para Chart.js
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'max-width:320px;margin:0 auto;';
+                const canvas = document.createElement('canvas');
+                canvas.id = 'chart-' + pk;
+                wrap.appendChild(canvas);
+                card.appendChild(wrap);
+                contenedor.appendChild(card);
+
+                // Color por posición: amarillo=1ro, rojo=último, naranja y azul en medio
+                // 2 opciones: amarillo (1ro) y rojo (último)
+                // 3 opciones con 'No' al final (ej. p2 Sí/Parcialmente/No): amarillo, naranja, rojo
+                const colores = etiquetas.map((_, i) => {
+                    if (etiquetas.length === 2) return i === 0 ? COLORES_PASTEL[0] : COLORES_PASTEL[3];
+                    if (etiquetas.length === 3) {
+                        if (i === 0) return COLORES_PASTEL[0]; // amarillo
+                        if (i === etiquetas.length - 1) return COLORES_PASTEL[3]; // rojo
+                        return COLORES_PASTEL[1]; // naranja para el del medio
+                    }
+                    return COLORES_PASTEL[Math.min(i, COLORES_PASTEL.length - 1)];
+                });
+
+                new Chart(canvas, {
+                    type: 'pie',
+                    data: {
+                        labels: etiquetas,
+                        datasets: [{ data: valores, backgroundColor: colores, borderColor: '#121212', borderWidth: 3 }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#f5f5dc', font: { size: 12 }, padding: 14 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => ` ${ctx.label}: ${ctx.raw} respuesta(s)`
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        // ─── Alterna apertura/cierre del acordeón ─────────────────────────────────
+        function toggleAcordeon(id) {
+            const panel = document.getElementById(id);
+            const icono = document.getElementById('ico-' + id.replace('acord-', ''));
+            const abierto = panel.style.display !== 'none';
+            panel.style.display = abierto ? 'none' : 'block';
+            icono.innerText = abierto ? '▼' : '▲';
+        }
+
+        // ─── Renderiza la lista de respuestas de texto (p11 o p12) con filtro ─────
+        function renderTextos(pk) {
+            const buscadorId = 'buscador-' + pk;
+            const listaId    = 'lista-' + pk;
+            const buscadorEl = document.getElementById(buscadorId);
+            const listaEl    = document.getElementById(listaId);
+            if (!listaEl) return;
+
+            const termino = buscadorEl ? buscadorEl.value.toLowerCase() : '';
+            const filtrados = datosAdmin.filter(r =>
+                r[pk] && r.nombre.toLowerCase().includes(termino)
+            );
+
+            if (!filtrados.length) {
+                listaEl.innerHTML = '<p style="color:#555;font-size:0.8rem;">SIN RESULTADOS.</p>';
+                return;
+            }
+
+            listaEl.innerHTML = filtrados.map(r => `
+                <div style="border-bottom:1px solid #2a2a2a;padding:12px 0;">
+                    <div style="color:#ccff00;font-size:0.78rem;font-weight:bold;margin-bottom:4px;">${r.nombre} <span style="color:#555;font-weight:normal;">— GRUPO ${r.grupo}</span></div>
+                    <div style="color:#d0d0d0;font-size:0.85rem;line-height:1.5;text-transform:none;">${r[pk]}</div>
+                </div>`).join('');
+        }
+
+        // ─── Filtro global del buscador superior (busca en p11 y p12 a la vez) ────
+        function filtrarRespuestasTexto() {
+            // El buscador superior no filtra las gráficas (son fijas),
+            // solo filtra las listas de texto abiertas
+            renderTextos('p11');
+            renderTextos('p12');
         }
 
         // ─── PARPADEO IDLE EN TOUCH ZONES (sin cambios) ───────────────────────────
