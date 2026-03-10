@@ -1,0 +1,8 @@
+body{
+    background-color: #f5eaea;
+}
+
+model-viewer{
+    width: 100vw;
+    height: 1000vh;
+}

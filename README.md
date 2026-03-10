@@ -1,41 +1,110 @@
-# Encuesta de Evento — Stranova
+# 📋 Encuesta de Evento — Katchi × Pálida | Stranova
 
-Página web para que alumnos respondan una encuesta de evaluación de un evento. Los datos se envían directamente a una base de datos en **Supabase**.
-
----
-
-## ¿Qué hace?
-
-1. El alumno ingresa su **nombre completo** y **grupo**
-2. Se le presentan **12 preguntas** de evaluación del evento
-3. Al enviar, los datos se guardan en Supabase
-4. Se muestra una pantalla de confirmación personalizada con su nombre
+Página web interactiva para que alumnos evalúen una conferencia de moda streetwear. Incluye modelos 3D giratorios, formulario de encuesta en pasos, envío de datos a Supabase y un panel de resultados para administradores.
 
 ---
 
-## Estructura del formulario
+## ¿Qué hace la página?
 
-| Paso | Descripción |
-|------|-------------|
-| **Paso 1** | Formulario de datos: nombre y grupo |
-| **Paso 2** | 12 preguntas de evaluación |
-| **Paso 3** | Pantalla de confirmación |
+### Vista del alumno
 
-### Preguntas
+La página se divide en dos secciones:
 
-- **P1 – P10** → Preguntas de opción múltiple (botones seleccionables)
-- **P11** → Texto libre: *¿Qué fue lo que más te gustó del evento?*
-- **P12** → Texto libre: *¿Qué aspectos consideras que pueden mejorar?*
+**Sección superior — Modelos 3D**
+Muestra dos modelos `.glb` animados (gorra y vestido) que rotan automáticamente. El usuario puede girarlos con el dedo o el mouse arrastrando sobre las zonas de toque. En el centro aparecen los logos de Katchi y Pálida con enlace a sus Instagrams, y el logo de la UDL abajo.
+
+**Sección inferior — Formulario en 3 pasos**
+
+```
+Paso 1 → Ingresa nombre y grupo
+Paso 2 → Responde 12 preguntas de evaluación
+Paso 3 → Pantalla de confirmación personalizada
+```
 
 ---
 
-## Base de datos (Supabase)
+## Flujo completo del usuario
 
-La tabla utilizada es `asistencia`. Requiere las siguientes columnas:
+```
+┌─────────────────────────────────┐
+│  Escribe nombre + grupo         │
+│  y presiona REGISTRAR           │
+└────────────┬────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────┐
+│  ¡Hola, [nombre]!               │
+│  Aparecen las 12 preguntas      │
+│                                 │
+│  P1–P10 → botones de opción     │
+│  P11–P12 → campos de texto      │
+└────────────┬────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────┐
+│  Validación antes de enviar:    │
+│  • ¿Respondiste todas?          │
+│  • ¿Los textos tienen algo?     │
+│  • ¿El nombre ya existe?        │
+└────────────┬────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────┐
+│  POST a Supabase                │
+│  Tabla: asistencia              │
+│  Columnas: nombre, grupo,       │
+│            p1 … p12             │
+└────────────┬────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────┐
+│  ¡Gracias, [nombre]!            │
+│  Scroll automático a esta       │
+│  pantalla de confirmación       │
+└─────────────────────────────────┘
+```
+
+
+---
+
+## Validaciones
+
+- **Campos vacíos** — no avanza si falta nombre o grupo
+- **Preguntas sin contestar** — muestra `"Por favor, contesta la pregunta X"` y hace scroll automático hasta ella
+- **Textos vacíos** — valida que P11 y P12 tengan al menos algo escrito
+- **Nombre duplicado** — si el nombre ya existe en Supabase (es Primary Key), muestra `"Ya respondiste esta encuesta"`
+- **Cookie de sesión** — guarda el nombre 7 días para pre-rellenarlo si el alumno regresa
+
+---
+
+## Panel de administrador
+
+Se accede poniendo `admin` en nombre y `7001` en grupo.
+
+### ¿Qué muestra?
+
+**Gráficas de pastel (P1–P10)**
+Una gráfica por cada pregunta de opción múltiple. Las opciones aparecen en el mismo orden que en el formulario, con colores fijos:
+
+| Color | Significa |
+|-------|-----------|
+| 🟡 Amarillo | Sí / Excelente / Mucho / Muy satisfecho |
+| 🟠 Naranja | Opciones intermedias |
+| 🔵 Azul | Opciones intermedias |
+| 🔴 Rojo | No / Mala / Insatisfecho |
+
+**Acordeones de texto (P11 y P12)**
+Cada pregunta es una cajita colapsable. Al abrirla muestra todas las respuestas con el nombre y grupo de cada alumno. Tiene buscador para filtrar por nombre.
+
+---
+
+## Base de datos — Supabase
+
+**Tabla:** `asistencia`
 
 | Columna | Tipo | Notas |
 |---------|------|-------|
-| `nombre` | `text` | **Primary Key** — evita registros duplicados |
+| `nombre` | `text` | **Primary Key** |
 | `grupo` | `text` | |
 | `p1` – `p10` | `text` | Respuestas de opción múltiple |
 | `p11` | `text` | Respuesta abierta |
@@ -43,36 +112,22 @@ La tabla utilizada es `asistencia`. Requiere las siguientes columnas:
 
 ---
 
-## Validaciones incluidas
-
-- **Campos vacíos** — no avanza al paso 2 si falta nombre o grupo
-- **Preguntas sin contestar** — alerta `"Por favor, contesta la pregunta X"` con scroll automático a la pregunta faltante (aplica para las 12 preguntas)
-- **Nombre duplicado** — si el nombre ya existe en la base de datos, muestra `"Ya respondiste esta encuesta"`
-- **Cookie de sesión** — guarda el nombre del alumno en un cookie de 7 días para pre-rellenarlo si regresa
-
----
-
-## Archivos
+## Archivos del proyecto
 
 ```
-index.html   → Página principal (formulario + lógica + modelos 3D)
-style.css    → Estilos de la página
+/
+├── index.html              → Página principal
+├── style.css               → Estilos globales
+├── assets/
+│   ├── img/
+│   │   ├── katchi.png      → Logo Katchi
+│   │   ├── palida.png      → Logo Pálida
+│   │   └── udl.png         → Logo universidad
+│   └── obj/
+│       ├── gorra.glb       → Modelo 3D gorra
+│       └── dress.glb       → Modelo 3D vestido
+└── stranova/
+    └── Stranova.jpg        → Banner footer
 ```
 
 ---
-
-## Configuración
-
-Las credenciales de Supabase están definidas al inicio del script en `index.html`:
-
-```js
-const SB_URL = "https://<tu-proyecto>.supabase.co";
-const SB_KEY = "<tu-anon-key>";
-```
----
-
-## Tecnologías
-
-- HTML / CSS / JavaScript vanilla
-- [Supabase](https://supabase.com) — base de datos y API REST
-- [Model Viewer](https://modelviewer.dev) — visualización de modelos 3D `.glb`
