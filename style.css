@@ -104,9 +104,12 @@ model-viewer {
     pointer-events: none;
 }
 
-.katchi-logo { width: 100%; max-width: clamp(200px, 45vw, 450px); z-index: 3; cursor: pointer; pointer-events: auto; }
-.crossover { font-family: 'Anton'; font-size: clamp(80px, 22vw, 180px); z-index: 3; text-shadow: 0 0 30px rgba(0,0,0,0.8); line-height: 0.9; }
-.palida-logo { width: 100%; max-width: clamp(220px, 47vw, 470px); z-index: 3; cursor: pointer; pointer-events: auto; }
+.katchi-logo { width: 100%; max-width: clamp(200px, 45vw, 450px); z-index: 3; cursor: pointer; pointer-events: auto; user-select: none; -webkit-user-select: none; }
+/* X más pequeña y no seleccionable */
+.crossover { font-family: 'Anton'; font-size: clamp(44px, 11vw, 90px); z-index: 3; text-shadow: 0 0 30px rgba(0,0,0,0.8); line-height: 0.9; user-select: none; -webkit-user-select: none; pointer-events: none; }
+.palida-logo { width: 100%; max-width: clamp(220px, 47vw, 470px); z-index: 3; cursor: pointer; pointer-events: auto; user-select: none; -webkit-user-select: none; }
+/* Logo rectangular de la universidad, debajo de Pálida */
+.udl-logo { width: 100%; max-width: clamp(140px, 32vw, 100px); z-index: 3; pointer-events: none; user-select: none; -webkit-user-select: none; margin-top: 10px; object-fit: contain; }
 
 .bottom-section { 
     background-color: var(--background); 
